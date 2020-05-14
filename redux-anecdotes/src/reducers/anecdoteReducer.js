@@ -1,58 +1,48 @@
-const anecdotesAtStart = [
-  'If it hurts, do it more often',
-  'Adding manpower to a late software project makes it later!',
-  'The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
-  'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
-  'Premature optimization is the root of all evil.',
-  'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.'
-]
+import anecdoteService from '../services/anecdotes'
 
-const getId = () => (100000 * Math.random()).toFixed(0)
-
-const asObject = (anecdote) => {
-  return {
-    content: anecdote,
-    id: getId(),
-    votes: 0
-  }
-}
-
-const initialState = anecdotesAtStart.map(asObject)
-
-const reducer = (state = initialState, action) => {
-  console.log('state now: ', state)
-  console.log('action', action)
-
+const reducer = (state = [], action) => {
   switch (action.type) {
     case 'LIKE_ANECDOTE':
-      const id = action.id
-      const anecdoteToChange = state.find(anecdote => anecdote.id === id)
-      const changedAnecdote = { ...anecdoteToChange, votes: anecdoteToChange.votes+1 }
-      return state.map(anecdote => anecdote.id !== id ? anecdote : changedAnecdote).sort((a,b) => { return b.votes - a.votes })
+      const anec = action.anecdote
+      return state.map(anecdote => anecdote.id !== anec.id ? anecdote : anec).sort((a,b) => { return b.votes - a.votes })
 
     case 'ADD_ANECDOTE':
-      const anecdoteToAdd = {
-        content: action.content,
-        id: getId(),
-        votes: 0
-      }
-      return state.concat(anecdoteToAdd)
+      return state.concat(action.data)
+
+    case 'INIT_ANECDOTES':
+      return action.content.sort((a,b) => {return b.votes - a.votes})
 
     default: return state
   }
 }
 
-export const voteAnecdote = (id) => {
-  return {
-    type: 'LIKE_ANECDOTE',
-    id: id
+export const voteAnecdote = (anecdote) => {
+  return async dispatch => {
+    const liked = await anecdoteService.likeAnecdote(anecdote)
+    dispatch({
+      type: 'LIKE_ANECDOTE',
+      anecdote: liked
+    })
   }
 }
 
-export const addAnecdote = (content) => {
-  return {
-    type: 'ADD_ANECDOTE',
-    content: content
+export const addAnecdote = (data) => {
+  return async dispatch => {
+    const newAnec = await anecdoteService.createNew(data)
+    dispatch({
+      type: 'ADD_ANECDOTE',
+      data: newAnec
+    })
+  }
+}
+
+export const initAnecdotes = () => {
+  return async dispatch => {
+    const anecs = await anecdoteService.getAll()
+    dispatch({
+      type: 'INIT_ANECDOTES',
+      content: anecs
+    })
   }
 }
 

@@ -1,9 +1,7 @@
 const initialState = ''
+let timeoutID = undefined
 
 const reducer = (state = initialState, action) => {
-  console.log('state now: ', state)
-  console.log('action: ', action)
-
   switch (action.type) {
     case 'SET_NOTIF': 
       return state = action.notif
@@ -12,6 +10,24 @@ const reducer = (state = initialState, action) => {
       return state = initialState
 
     default: return state
+  }
+}
+
+export const setNotifWithTimeout = (notif, timeMS) => {
+  return async dispatch => {
+    clearTimeout(timeoutID)
+
+    dispatch({
+      type: 'SET_NOTIF',
+      notif: notif
+    })
+
+    timeoutID = setTimeout(() => {
+      console.log('timeoutID in var: ' + timeoutID)
+      dispatch({
+        type: 'CLEAR_NOTIF'
+      })
+    }, timeMS)
   }
 }
 
